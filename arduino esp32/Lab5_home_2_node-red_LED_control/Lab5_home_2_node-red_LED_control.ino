@@ -1,3 +1,5 @@
+// Node-red를 활용해 GUI와 연동하여 시리얼 통신으로 GPIO 동작시키기
+
 #include <SparkFunBME280.h>
 #define blink_led 15 // SET blink_led pin num
 String msg;
