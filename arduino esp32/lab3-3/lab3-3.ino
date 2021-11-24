@@ -1,3 +1,5 @@
+//수정 테스트
+
 #define _D0_PIR_GPIO 2
 #define _D1_LED_GPIO 15
 int val;
