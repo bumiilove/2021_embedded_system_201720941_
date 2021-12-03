@@ -13,6 +13,7 @@
 
 int norepeat_R=0;
 int norepeat_P=0;
+String helmet ; //signal from serial in
 
 // LED Matrix 드라이버 제어를 위한 라이브러리
 #include <Adafruit_GFX.h> 
@@ -55,13 +56,13 @@ static const uint8_t PROGMEM bmp_OFF[]=
 class MyCallbacks: public BLECharacteristicCallbacks {   //RX
     void onWrite(BLECharacteristic *pCharacteristic) {
       std::string value = pCharacteristic->getValue();
-
-      if (value.length() > 0) {
-        Serial.println("*********");
-        Serial.print("New value: ");
+      
+      if (value.length() > 0 ) {
+        //Serial.println("*********");
+        //Serial.print("New value: ");
         for (int i = 0; i < value.length(); i++)
         {            
-          Serial.print(value[i]);
+          //Serial.print(value[i]);
           if (value[0]=='B')
           { 
             if (value[1]=='A')
@@ -89,8 +90,8 @@ class MyCallbacks: public BLECharacteristicCallbacks {   //RX
             }
           }
         }
-        Serial.println();
-        Serial.println("*********");
+        //Serial.println();
+        //Serial.println("*********");
       }
     }
 };
@@ -133,5 +134,17 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
+  // 헬멧 감지 여부를 시리얼 통신으로 받음: 감지=1 미감지=0 횟수 초과 =-1
+  helmet = Serial.readStringUntil('\n');
+  if (helmet == "1"){
+                Serial.print(helmet);
+                matrix.setRotation(0);
+                matrix.clear();
+                matrix.drawBitmap(0,0,bmp_R,8,8,128); 
+    }
+    else if(helmet == "-1"){
+                Serial.print(helmet);
+    }
+  
   delay(2000);
 }

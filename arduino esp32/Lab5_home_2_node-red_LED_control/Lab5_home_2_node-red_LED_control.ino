@@ -29,4 +29,5 @@ void loop()
     digitalWrite(blink_led,HIGH);
   else
     digitalWrite(blink_led,LOW);
+  Serial.print(toggle);
 }
