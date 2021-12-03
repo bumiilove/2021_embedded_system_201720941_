@@ -56,8 +56,65 @@ static const uint8_t PROGMEM bmp_OFF[]=
 { B00000000,B01001111,B10101010,B10101111,B10101010,B10101010,B01001010,B00000000 };
 //
 
+// 킥보드 상태 초기화 함수
+void pm_init(){
+  
+  matrix.setRotation(0);
+  matrix.clear();
+  int state = 0;  // 킥보드의 동작 상태를 표현하는 변수 0: /on 1:running/ stop: 2/ off: 4 
+  int cost = 0;   // 요금 변수 
+  int finish =0;  // 킥보드의 사용이 종료됐음을 표현하는 변수 0: 동작중 1: 사용 종료
+  int park =0 ;   // 주차 플래그 0: 주차spot에 주차하지 않음, 1: 주차spot에 주차함 
+  return;
+}
 
-
+// 킥보드 동작 함수
+void pm_on(){
+  // 헬멧 미착용시: 매트릭스에 S를 띄우고 state = 0->2
+    if((state == 0 || state == 2) && rx_data =="0"){
+                state = 2;
+                //S 만 출력
+    }
+// 헬멧 착용시 : 매트릭스에 R을 띄우고 시리얼 송신: 1 (킥보드 사용시작 : state =>1)
+    else if ((state == 0 || state == 2) && rx_data == "1"){
+                state = 1;
+                finish =0;                
+                tx_data = 1;
+                Serial.println(tx_data);
+                
+                matrix.setRotation(0); 
+                matrix.clear();
+                matrix.drawBitmap(0,0,bmp_R,8,8,128); 
+    }
+// 횟수 초과시: state를 4로 바꾸는 동시에 finish도 1로 바꿈, tx_data는 4로 바꿔 사용할 수 없음을 사운드로 알림 
+    else if(state == 2 && rx_data == "-1"){
+                tx_data = 4;
+                state = 4;
+                finish = 1;
+                Serial.println(tx_data);
+    }
+// 종료시    : state를 4로 바꿔줌
+    else if(state == 1&& rx_data == "4"){
+      state = 4;
+      park =1;
+    }
+// 사용자가 직접 킥보드를 종료한 경우 (finish =0 -> 1)
+    else if(state == 4 && finish ==0){
+      
+      finish = 1;
+      state = 0;  // 나중에 없어야 맞음
+      
+      if(park == 1){        // 주차를 한 경우 cost를 500원 절감
+        Serial.println("주차를 확인했습니다.");
+        cost -= 500;
+      }
+      Serial.println(cost);
+      matrix.setRotation(0);
+      matrix.clear();
+      matrix.drawBitmap(0,0,bmp_P,8,8,128);
+    }
+    return;
+  }
 //BLE server : Data receive part
 class MyCallbacks: public BLECharacteristicCallbacks {   //RX
     void onWrite(BLECharacteristic *pCharacteristic) {
@@ -88,6 +145,7 @@ class MyCallbacks: public BLECharacteristicCallbacks {   //RX
             {
               if(norepeat_P==0)
               {
+                park =1; // 주차 스팟에 주차시
                 norepeat_P++;
                 matrix.setRotation(0);
                 matrix.clear();
@@ -138,56 +196,18 @@ void setup() {
   pAdvertising->start();
 }
 
-void loop() {
-    // 헬멧 감지 여부를 시리얼 수신: 감지=1 미감지=0 횟수 초과 =-1
+void loop() {    
+// 헬멧 감지 여부를 시리얼 수신: 감지=1 미감지=0 횟수 초과 =-1
     rx_data = Serial.readStringUntil('\n');
-  
-    // 헬멧 미착용시: 매트릭스에 S를 띄우고 상태는 유지.
-    if((state == 0 || state == 2) && rx_data =="0"){
-                state = 2;
-                //S 만 출력
+    if(rx_data =="9"){
+      pm_init();  
     }
-    // 헬멧 착용시 : 매트릭스에 R을 띄우고 시리얼 송신: 1 (킥보드 사용시작 : state =>1)
-    else if ((state == 0 || state == 2) && rx_data == "1"){
-                state = 1;
-                matrix.setRotation(0); 
-                matrix.clear();
-                matrix.drawBitmap(0,0,bmp_R,8,8,128); 
-                
-                tx_data = 1;
-                Serial.println(tx_data);
-                delay(100);
+    else{
+      pm_on();
     }
-    // 횟수 초과시: state를 4로 바꾸는 동시에 finish도 1로 바꿈, tx_data는 4로 바꿔 사용할 수 없음을 사운드로 알림 
-    else if(state == 2 && rx_data == "-1"){
-                tx_data = 4;
-                state = 4;
-                finish = 1;
-                Serial.println(tx_data);
-    }
-    // 종료시    : state를 4로 바꿔줌
-    else if(state == 1&& rx_data == "4"){
-      state = 4;
-    }
-    // 사용자가 직접 킥보드를 종료한 경우 (finish =0 -> 1)
-    else if(state == 4 && finish ==0){
-      // 주차를 한 경우 cost를 500원 절감
-      if(park == 1){
-        cost -= 500;
-        }
-      Serial.println(cost);
-      finish = 1;
-      state = 0;
-      matrix.setRotation(0);
-      matrix.clear();
-      matrix.drawBitmap(0,0,bmp_P,8,8,128);
-    }
-
-    // 킥보드의 상태가 running일 경우 요금은 계속 100원씩 증가 
+// 킥보드의 상태가 running일 경우 요금은 계속 100원씩 증가 
     if(state == 1){
       cost += 100;
     }
-
-
   delay(2000);
 }
