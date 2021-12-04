@@ -225,6 +225,10 @@ void setup() {
   
   BLEAdvertising *pAdvertising = pServer->getAdvertising();
   pAdvertising->start();
+
+  matrix.setRotation(0);
+  matrix.clear();
+  matrix.drawBitmap(0,0,bmp_ON,8,8,128);
 }
 
 void loop() {    
