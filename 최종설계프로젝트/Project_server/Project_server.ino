@@ -28,33 +28,43 @@ int park =0 ;   // 주차 플래그 0: 주차spot에 주차하지 않음, 1: 주
 Adafruit_IS31FL3731 matrix = Adafruit_IS31FL3731();
 //////////////////////////////////////
 
-//Battery capacity print
-static const uint8_t PROGMEM bmp_72[]=
-{ B00000000,B11100110,B10101001,B10100001,B00100110,B00101000,B00101111,B00000000 };
+//State Display
+static const uint8_t PROGMEM bmp_ON[]=
+{ B00000000,B01001001,B10101101,B10101101,B10101011,B10101011,B01001001,B00000000 };
 
-static const uint8_t PROGMEM bmp_percent[]=
-{ B00000000,B01100010,B01100100,B00001000,B00010000,B00100110,B01000110,B00000000 };
+static const uint8_t PROGMEM bmp_OFF[]=
+{ B00000000,B01001111,B10101010,B10101111,B10101010,B10101010,B01001010,B00000000 };
 
 static const uint8_t PROGMEM bmp_R[]=
 { B01111100,B01000100,B01000100,B01111100,B01100000,B01010000,B01001000,B01000100 };
+
+static const uint8_t PROGMEM bmp_S[]=
+{ B00111100,B01000010,B01000010,B01100000,B00011100,B00000010,B01000010,B00111100 };
+//
+
+//Battery capacity print
+static const uint8_t PROGMEM bmp_B[]=
+{ B00011000,B01111110,B01000010,B01000010,B01111110,B01111110,B01111110,B01111110 };//battery capacity
 //
 
 //park in parking zone
 static const uint8_t PROGMEM bmp_P[]=
 { B01111110,B01000010,B01000010,B01111110,B01000000,B01000000,B01000000,B01000000 };
 
-static const uint8_t PROGMEM bmp_5[]=
-{ B01111110,B01000000,B01000000,B01111100,B00000010,B00000010,B01000100,B00111000 };//current fee
-
-static const uint8_t PROGMEM bmp_minus[]=
-{ B00000000,B00000000,B00000000,B01111110,B00000000,B00000000,B00000000,B00000000 };
-
-static const uint8_t PROGMEM bmp_3[]=
-{ B00011100,B00100010,B00000010,B00011100,B00000010,B00100010,B00011100,B00000000 };//discount
-
-static const uint8_t PROGMEM bmp_OFF[]=
-{ B00000000,B01001111,B10101010,B10101111,B10101010,B10101010,B01001010,B00000000 };
+static const uint8_t PROGMEM bmp_D[]=
+{ B01111000,B01000100,B01000010,B01000010,B01000010,B01000010,B01000100,B01111000 };//discount
 //
+
+static const uint8_t PROGMEM bmp_badWeather[]=
+{ B00000000,B01100110,B01100110,B00000000,B00011000,B00100100,B01000010,B00000000 };//bad weather
+
+static const uint8_t PROGMEM bmp_money[]=
+{ B00000000,B01000010,B01000010,B01011010,B11111111,B01011010,B01011010,B00100100 };//dollar
+
+static const uint8_t PROGMEM bmp_speedDec[]=
+{ B00011000,B00011000,B00011000,B10011001,B01011010,B00111100,B00011000,B00000000 };//아래방향 화살표
+
+
 
 // 킥보드 상태 초기화 함수
 void pm_init(){
@@ -119,43 +129,70 @@ void pm_on(){
 class MyCallbacks: public BLECharacteristicCallbacks {   //RX
     void onWrite(BLECharacteristic *pCharacteristic) {
       std::string value = pCharacteristic->getValue();
-      
-      if (value.length() > 0 ) {
-        //Serial.println("*********");
-        //Serial.print("New value: ");
+
+      if (value.length() > 0) {
+        Serial.println("*********");
+        Serial.print("New value: ");
         for (int i = 0; i < value.length(); i++)
         {            
-          //Serial.print(value[i]);
-          if (value[0]=='B')
+          Serial.print(value[i]);
+          if (value[0]=='R' && state==4) // 재시작 : 휴대폰으로 'RESTART'보냄 
           { 
-            if (value[1]=='A')
+            if (value[1]=='E')
             {
-              if(norepeat_R==0)
-              {
-                norepeat_R++;
-                matrix.setRotation(0);
-                matrix.clear();
-                matrix.drawBitmap(0,0,bmp_R,8,8,128); 
-              }
+              state=0;
+              matrix.setRotation(0);
+              matrix.clear();
+              matrix.drawBitmap(0,0,bmp_ON,8,8,128); 
             }
           }
-          else if (value[0]=='P')
+          else if (value[0]=='B' && state<3 ) // 킥보드 배터리 양 출력
           {
             if (value[1]=='A')
             {
-              if(norepeat_P==0)
+              matrix.setRotation(0);
+              matrix.clear();
+              matrix.drawBitmap(0,0,bmp_B,8,8,128);
+              delay(2000);
+              if (state==0)
               {
-                park =1; // 주차 스팟에 주차시
-                norepeat_P++;
+                matrix.clear();
+                matrix.drawBitmap(0,0,bmp_ON,8,8,128);
+              }
+              else if (state==1)
+              {
+                matrix.clear();
+                matrix.drawBitmap(0,0,bmp_R,8,8,128);
+              }
+              else if (state==2)
+              {
+                matrix.clear();
+                matrix.drawBitmap(0,0,bmp_S,8,8,128);
+              }
+            }
+          }
+          else if (value[0]=='P')  // 주차 SPOT에 가서 주차함 
+          {
+            if (value[1]=='A')
+            {
+              if (state==1)
+              {
+                state=4;
                 matrix.setRotation(0);
                 matrix.clear();
                 matrix.drawBitmap(0,0,bmp_P,8,8,128);
-              } 
+                delay(2000);
+                matrix.clear();
+                matrix.drawBitmap(0,0,bmp_D,8,8,128);
+                delay(2000);
+                matrix.clear();
+                matrix.drawBitmap(0,0,bmp_OFF,8,8,128);
+              }
             }
           }
         }
-        //Serial.println();
-        //Serial.println("*********");
+        Serial.println();
+        Serial.println("*********");
       }
     }
 };
@@ -170,12 +207,6 @@ void setup() {
   Serial.begin(115200);
   pinMode(15, OUTPUT); 
   
-  Serial.println("1- Download and install an BLE scanner app in your phone");
-  Serial.println("2- Scan for BLE devices in the app");
-  Serial.println("3- Connect to MyESP32");
-  Serial.println("4- Go to CUSTOM CHARACTERISTIC in CUSTOM SERVICE and write something");
-  Serial.println("5- See the magic =)");
-
   BLEDevice::init("MyESP32");
   BLEServer *pServer = BLEDevice::createServer();
 
