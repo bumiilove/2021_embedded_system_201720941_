@@ -69,12 +69,13 @@ static const uint8_t PROGMEM bmp_speedDec[]=
 // 킥보드 상태 초기화 함수
 void pm_init(){
   
+  state = 0;  // 킥보드의 동작 상태를 표현하는 변수 0: /on 1:running/ stop: 2/ off: 4 
+  cost = 0;   // 요금 변수 
+  finish = 0;  // 킥보드의 사용이 종료됐음을 표현하는 변수 0: 동작중 1: 사용 종료
+  park = 0;   // 주차 플래그 0: 주차spot에 주차하지 않음, 1: 주차spot에 주차함 
   matrix.setRotation(0);
   matrix.clear();
-  int state = 0;  // 킥보드의 동작 상태를 표현하는 변수 0: /on 1:running/ stop: 2/ off: 4 
-  int cost = 0;   // 요금 변수 
-  int finish =0;  // 킥보드의 사용이 종료됐음을 표현하는 변수 0: 동작중 1: 사용 종료
-  int park =0 ;   // 주차 플래그 0: 주차spot에 주차하지 않음, 1: 주차spot에 주차함 
+  delay(1500);
   return;
 }
 
@@ -83,6 +84,9 @@ void pm_on(){
   // 헬멧 미착용시: 매트릭스에 S를 띄우고 state = 0->2
     if((state == 0 || state == 2) && rx_data =="0"){
                 state = 2;
+                matrix.setRotation(0); 
+                matrix.clear();
+                matrix.drawBitmap(0,0,bmp_S,8,8,128);
                 //S 만 출력
     }
 // 헬멧 착용시 : 매트릭스에 R을 띄우고 시리얼 송신: 1 (킥보드 사용시작 : state =>1)
@@ -103,25 +107,39 @@ void pm_on(){
                 finish = 1;
                 Serial.println(tx_data);
     }
-// 종료시    : state를 4로 바꿔줌
-    else if(state == 1&& rx_data == "4"){
-      state = 4;
-      park =1;
-    }
-// 사용자가 직접 킥보드를 종료한 경우 (finish =0 -> 1)
-    else if(state == 4 && finish ==0){
-      
-      finish = 1;
-      state = 0;  // 나중에 없어야 맞음
-      
-      if(park == 1){        // 주차를 한 경우 cost를 500원 절감
-        Serial.println("주차를 확인했습니다.");
-        cost -= 500;
+// 종료시    : 사용자가 종료버튼을 눌러 rx_data가 4인 경우 
+    else if((state == 1 || state == 3) && rx_data == "4"){
+      // 주차 스팟 외부에서 주차하여, 디스카운트 없이 종료될때
+      if(state ==1){
+        Serial.println(cost);
+        //matrix.setRotation(0);
+        //matrix.clear();
+        //matrix.drawBitmap(0,0,bmp_OFF,8,8,128);
       }
-      Serial.println(cost);
-      matrix.setRotation(0);
-      matrix.clear();
-      matrix.drawBitmap(0,0,bmp_P,8,8,128);
+      // 주차 스팟에서 주차하여 디스카운트와 함께 종료될때   
+      else if(state == 3){
+        Serial.println(state);
+        cost -= 500;
+        Serial.println(cost);
+        matrix.setRotation(0);
+        matrix.clear();
+        matrix.drawBitmap(0,0,bmp_P,8,8,128);
+        //delay(1500);
+        //matrix.clear();
+        //matrix.drawBitmap(0,0,bmp_OFF,8,8,128);
+      }
+        state =4; 
+    }
+    else if(state == 4){
+        matrix.setRotation(0);
+        matrix.clear();
+        matrix.drawBitmap(0,0,bmp_OFF,8,8,128);
+      }
+    else if(state == 0){
+        matrix.setRotation(0);
+        matrix.clear();
+        matrix.drawBitmap(0,0,bmp_ON,8,8,128);
+              
     }
     return;
   }
