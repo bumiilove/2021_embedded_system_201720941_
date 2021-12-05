@@ -17,8 +17,9 @@ int norepeat_P=0;
 // 경범 추가
 String rx_data ;// 헬멧 착용 감지상태를 입력받는 변수(시리얼 수신)1: 감지,0:미감지,-1:횟수 오버->4로 전달
 int tx_data;    // 시리얼 송신으로 정보를 전달하는 변수 (시리얼 송신)1: 헬멧 감지 후 사용 시작알림, 8: 인식 횟수 초과로 사용불가 알림
-int state = 0;  // 킥보드의 동작 상태를 표현하는 변수 0: /on 1:running/ stop: 2/ off: 4 
+int state = 0;  // 킥보드의 동작 상태를 표현하는 변수 0: /on 1:running/ stop: 2/ park: 3/ off: 4 
 int cost = 0;   // 요금 변수 
+int battery = 100;// 잔여 배터리양 
 int finish =0;  // 킥보드의 사용이 종료됐음을 표현하는 변수 0: 동작중 1: 사용 종료
 int park =0 ;   // 주차 플래그 0: 주차spot에 주차하지 않음, 1: 주차spot에 주차함 
 // LED Matrix 드라이버 제어를 위한 라이브러리
@@ -154,17 +155,7 @@ class MyCallbacks: public BLECharacteristicCallbacks {   //RX
         for (int i = 0; i < value.length(); i++)
         {            
           Serial.print(value[i]);
-          if (value[0]=='R' && state==4) // 재시작 : 휴대폰으로 'RESTART'보냄 
-          { 
-            if (value[1]=='E')
-            {
-              state=0;
-              matrix.setRotation(0);
-              matrix.clear();
-              matrix.drawBitmap(0,0,bmp_ON,8,8,128); 
-            }
-          }
-          else if (value[0]=='B' && state<3 ) // 킥보드 배터리 양 출력
+          if (value[0]=='B' && state<3 ) // 킥보드 배터리 양 출력
           {
             if (value[1]=='A')
             {
@@ -195,16 +186,7 @@ class MyCallbacks: public BLECharacteristicCallbacks {   //RX
             {
               if (state==1)
               {
-                state=4;
-                matrix.setRotation(0);
-                matrix.clear();
-                matrix.drawBitmap(0,0,bmp_P,8,8,128);
-                delay(2000);
-                matrix.clear();
-                matrix.drawBitmap(0,0,bmp_D,8,8,128);
-                delay(2000);
-                matrix.clear();
-                matrix.drawBitmap(0,0,bmp_OFF,8,8,128);
+                state=3;
               }
             }
           }
@@ -261,6 +243,7 @@ void loop() {
 // 킥보드의 상태가 running일 경우 요금은 계속 100원씩 증가 
     if(state == 1){
       cost += 100;
+      battery -= 1;
     }
   delay(2000);
 }
