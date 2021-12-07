@@ -1,4 +1,4 @@
-/*
+ /*
     Based on Neil Kolban example for IDF: https://github.com/nkolban/esp32-snippets/blob/master/cpp_utils/tests/BLE%20Tests/SampleWrite.cpp
     Ported to Arduino ESP32 by Evandro Copercini
 */
@@ -119,7 +119,7 @@ void pm_on(){
     battery_print = 0;
   }
   else if((state == 0 || state == 2) && rx_data == "1"){
-      state = 1;
+                state = 1;
                 finish =0;                
                 tx_data = 1;
                 Serial.println(tx_data);
@@ -151,12 +151,17 @@ void pm_on(){
   state =4; 
 }    
   //날씨
-  else if(rx_data == "7"){
+  else if(rx_data == "7"){  // 맑음
           matrix.setRotation(0);
           matrix.clear();
             matrix.drawBitmap(0,0,bmp_goodWeather,8,8,128);
             delay(3000);
-    
+    }
+  else if(rx_data == "8"){  // 맑지 않음
+          matrix.setRotation(0);
+          matrix.clear();
+            matrix.drawBitmap(0,0,bmp_badWeather,8,8,128);
+            delay(3000);
     }
 // 상태값에 따른 출력부
   if(state == 0){
@@ -250,7 +255,7 @@ void loop() {
 // 킥보드의 상태가 running일 경우 요금은 계속 100원씩 증가 
     if(state == 1){
       cost += 100;
-      battery -= 7;
+      battery -= 5;
       if(battery <= 0)
         battery = 0;
     }
