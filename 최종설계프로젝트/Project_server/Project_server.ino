@@ -255,10 +255,10 @@ void loop() {
 // 킥보드의 상태가 running일 경우 요금은 계속 100원씩 증가 
     if(state == 1){
       cost += 100;
-      battery -= 5;
+      battery -= 7;
       if(battery <= 0)
         battery = 0;
     }
-    delay(2000);
+    delay(2000);  
   //Serial.println(state);
 }
