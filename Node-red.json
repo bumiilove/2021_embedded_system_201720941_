@@ -1,0 +1,1105 @@
+[
+    {
+        "id": "acda1aea8e49d1fc",
+        "type": "tab",
+        "label": "헬멧 인식 모델 테스트 플로우",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "6b3c2889e9206252",
+        "type": "http request",
+        "z": "acda1aea8e49d1fc",
+        "name": "Request to mobile",
+        "method": "GET",
+        "ret": "bin",
+        "paytoqs": "ignore",
+        "url": "http://192.168.6.0:8080/photo.jpg",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "senderr": false,
+        "x": 370,
+        "y": 160,
+        "wires": [
+            [
+                "495d65fa5a91d184"
+            ]
+        ]
+    },
+    {
+        "id": "3c3aa785810ec72e",
+        "type": "inject",
+        "z": "acda1aea8e49d1fc",
+        "name": "시도횟수 초기메세지",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "reset",
+        "payload": "3",
+        "payloadType": "num",
+        "x": 120,
+        "y": 240,
+        "wires": [
+            [
+                "66d7abcc894924b0"
+            ]
+        ]
+    },
+    {
+        "id": "3687912bd8679d81",
+        "type": "teachable machine",
+        "z": "acda1aea8e49d1fc",
+        "name": "",
+        "mode": "online",
+        "modelUrl": "https://teachablemachine.withgoogle.com/models/fP4SacjKB/",
+        "localModel": "teachable_model",
+        "output": "best",
+        "activeThreshold": false,
+        "threshold": 80,
+        "activeMaxResults": false,
+        "maxResults": 3,
+        "passThrough": true,
+        "x": 710,
+        "y": 100,
+        "wires": [
+            [
+                "1a0a034ab0409c48",
+                "ce2c7974f570aa8a"
+            ]
+        ]
+    },
+    {
+        "id": "af9a0a567c25e2af",
+        "type": "ui_button",
+        "z": "acda1aea8e49d1fc",
+        "name": "대여 요청 버튼",
+        "group": "8d59ae977e91954c",
+        "order": 4,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "인식 버튼",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "payload": "",
+        "payloadType": "date",
+        "topic": "topic",
+        "topicType": "msg",
+        "x": 120,
+        "y": 120,
+        "wires": [
+            [
+                "56b00d977c5c95f3"
+            ]
+        ]
+    },
+    {
+        "id": "1a0a034ab0409c48",
+        "type": "debug",
+        "z": "acda1aea8e49d1fc",
+        "name": "인식 결과 디버그",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload[0].class",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1030,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "1234098476a9eba6",
+        "type": "link in",
+        "z": "acda1aea8e49d1fc",
+        "name": "",
+        "links": [
+            "ce2c7974f570aa8a"
+        ],
+        "x": 75,
+        "y": 400,
+        "wires": [
+            [
+                "9f19dc4a897134de",
+                "c4145dad39016962"
+            ]
+        ]
+    },
+    {
+        "id": "9f19dc4a897134de",
+        "type": "function",
+        "z": "acda1aea8e49d1fc",
+        "name": "사운드 출력 함수 ",
+        "func": "var local=context.get('data') || {};\nvar data = msg.payload[0].class;\nvar temp = msg.payload;\n    \nif (local.count===undefined)//test exists\n{\n  local.count=3;\n}\nlocal.count -= 1;\n\nif(temp ==9)\n    local.count=3;\n\nif(local.count >= 0){\n    if(data == \"None\")\n        msg.payload =\"헬멧이 감지되지 않았습니다\";\n    else if(data == \"Helmet\")\n        msg.payload = \"헬멧을 착용했습니다\"; \n    else\n        msg.payload = \"인식을 시도해주세요.\"; \n}\nelse\n    msg.payload = \"더이상 시도할 수 없습니다.\";\ncontext.set('data',local);\nreturn msg",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 270,
+        "y": 400,
+        "wires": [
+            [
+                "921fab03c186b124",
+                "181a91043f350c29",
+                "c4c01e0535c66e29"
+            ]
+        ]
+    },
+    {
+        "id": "37d443db097bfd89",
+        "type": "ui_audio",
+        "z": "acda1aea8e49d1fc",
+        "name": "헬멧 감지/미감지/시도불가 사운드 출력",
+        "group": "8d59ae977e91954c",
+        "voice": "Google 한국의",
+        "always": false,
+        "x": 730,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "921fab03c186b124",
+        "type": "debug",
+        "z": "acda1aea8e49d1fc",
+        "name": "인식 결과 출력",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 520,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "181a91043f350c29",
+        "type": "ui_text",
+        "z": "acda1aea8e49d1fc",
+        "group": "8d59ae977e91954c",
+        "order": 6,
+        "width": 0,
+        "height": 0,
+        "name": "헬멧 감지 여부 출력",
+        "label": "인식 결과: ",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "x": 540,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "36baa26ade58726f",
+        "type": "serial out",
+        "z": "acda1aea8e49d1fc",
+        "name": "",
+        "serial": "e000096b7c41a103",
+        "x": 530,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "c4145dad39016962",
+        "type": "function",
+        "z": "acda1aea8e49d1fc",
+        "name": "결과 송신 함수 미착용: 0  착용:1 초과: -1",
+        "func": "var local=context.get('data') || {};\nvar data = msg.payload[0].class;\n\nvar temp = msg.payload;\nif(temp ==9)\n    local.count=3;\n    \nif (local.count===undefined)//test exists\n{\n  local.count=3;\n}\nlocal.count -= 1;\n\nif(data == \"None\")\n    msg.payload = 0;    // 미감지\nelse if(data == \"Helmet\")\n    msg.payload = 1;    // 감지\n    \nif(local.count < 0)\n    msg.payload = -1;   //초과 -> off 상태로 전환\n    \ncontext.set('data',local);\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 280,
+        "y": 540,
+        "wires": [
+            [
+                "36baa26ade58726f",
+                "984bc8e38f5f7b51"
+            ]
+        ]
+    },
+    {
+        "id": "fc8f30026bfed6ac",
+        "type": "comment",
+        "z": "acda1aea8e49d1fc",
+        "name": "",
+        "info": "모델 결과 출력 이후\nmsg.payload[0].class = \"None\" or \"Helmet\"\n\nfunc 1 : None => msg.payload =\"헬멧이 감지되지 않았습니다\" 사운드 출력\n         Helmet = >msg.payload =\"헬멧을 착용했습니다\"   사운드 출력",
+        "x": 300,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "66d7abcc894924b0",
+        "type": "ui_text",
+        "z": "acda1aea8e49d1fc",
+        "group": "8d59ae977e91954c",
+        "order": 1,
+        "width": "0",
+        "height": "0",
+        "name": "안내 문구 ui",
+        "label": "전동킥보드를 이용하려면 헬멧을 착용하고 버튼을 눌러주세요",
+        "format": "남은시도: {{msg.payload}} ",
+        "layout": "col-center",
+        "className": "",
+        "x": 350,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "d2c269ace0fdb493",
+        "type": "comment",
+        "z": "acda1aea8e49d1fc",
+        "name": "",
+        "info": "대여 요청 버튼 UI가 동작하면 \nIP CAM 에 http request를 보내고, 해당 결과 사진을\nviewer에 출력\n해당 사진은 로컬에 저장됨. \n\nteachable machine 노드에 해당 사진이 입력되면 인식결과를 디버그 창에 출력\n(msg.payload[0].class)",
+        "x": 520,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "5e182c90eeda50a1",
+        "type": "comment",
+        "z": "acda1aea8e49d1fc",
+        "name": "",
+        "info": "https://teachablemachine.withgoogle.com/models/fP4SacjKB/\n민지 경범 모자 / 미착용 \n\nhttps://teachablemachine.withgoogle.com/models/7kKT_RAEN/\n\nhttps://teachablemachine.withgoogle.com/models/7kKT_RAEN/",
+        "x": 440,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "984bc8e38f5f7b51",
+        "type": "debug",
+        "z": "acda1aea8e49d1fc",
+        "name": "시리얼 TX 출력",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 560,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "56b00d977c5c95f3",
+        "type": "function",
+        "z": "acda1aea8e49d1fc",
+        "name": "카운트 함수",
+        "func": "var local=context.get('data') || {};\n\nif (local.count===undefined)//test exists\n{\n  local.count=3;\n}\n  local.count -= 1;\n\nif(msg.topic == \"reset\"){\n    local.count =3;\n}\nmsg.payload=local.count;\n\ncontext.set('data',local);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 150,
+        "y": 160,
+        "wires": [
+            [
+                "5e6f6c4b16df4737"
+            ]
+        ]
+    },
+    {
+        "id": "2452eec65b0b995b",
+        "type": "inject",
+        "z": "acda1aea8e49d1fc",
+        "name": "인식 요청 초기 메세지",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "인식을 시도해주세요",
+        "payloadType": "str",
+        "x": 280,
+        "y": 440,
+        "wires": [
+            [
+                "181a91043f350c29"
+            ]
+        ]
+    },
+    {
+        "id": "5e6f6c4b16df4737",
+        "type": "function",
+        "z": "acda1aea8e49d1fc",
+        "name": "",
+        "func": "var cnt = msg.payload;\nif(msg.topic !== \"reset\"){\n    if(cnt <=0)\n        msg.payload =0;\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 180,
+        "y": 200,
+        "wires": [
+            [
+                "66d7abcc894924b0",
+                "6b3c2889e9206252",
+                "9b42d95bf90beb5f"
+            ]
+        ]
+    },
+    {
+        "id": "9b42d95bf90beb5f",
+        "type": "debug",
+        "z": "acda1aea8e49d1fc",
+        "name": "남은 시도 횟수 디버그",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 380,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "495d65fa5a91d184",
+        "type": "jimp-image",
+        "z": "acda1aea8e49d1fc",
+        "name": "",
+        "data": "payload",
+        "dataType": "msg",
+        "ret": "buf",
+        "parameter1": "90",
+        "parameter1Type": "num",
+        "parameter2": "",
+        "parameter2Type": "none",
+        "parameter3": "0",
+        "parameter3Type": "msg",
+        "parameter4": "pay",
+        "parameter4Type": "msg",
+        "parameter5": "18",
+        "parameter5Type": "msg",
+        "parameter6": "10",
+        "parameter6Type": "msg",
+        "parameter7": "",
+        "parameter7Type": "msg",
+        "parameter8": "",
+        "parameter8Type": "msg",
+        "sendProperty": "payload",
+        "sendPropertyType": "msg",
+        "parameterCount": 2,
+        "jimpFunction": "rotate",
+        "selectedJimpFunction": {
+            "name": "rotate",
+            "fn": "rotate",
+            "description": "rotate the image clockwise by a number of degrees. Optionally, a resize mode can be passed. If `false` is passed as the second parameter, the image width and height will not be resized.",
+            "parameters": [
+                {
+                    "name": "deg",
+                    "type": "num",
+                    "required": true,
+                    "hint": "the number of degrees to rotate the image by"
+                },
+                {
+                    "name": "mode",
+                    "type": "resizeMode|bool",
+                    "required": false,
+                    "hint": "resize mode or a boolean, if false then the width and height of the image will not be changed"
+                }
+            ]
+        },
+        "x": 550,
+        "y": 160,
+        "wires": [
+            [
+                "3687912bd8679d81",
+                "e6feb05cad80def8"
+            ]
+        ]
+    },
+    {
+        "id": "e6feb05cad80def8",
+        "type": "image viewer",
+        "z": "acda1aea8e49d1fc",
+        "name": "",
+        "width": "120",
+        "data": "payload",
+        "dataType": "msg",
+        "active": true,
+        "x": 870,
+        "y": 160,
+        "wires": [
+            []
+        ],
+        "outputLabels": [
+            "37"
+        ]
+    },
+    {
+        "id": "efcc8a8f5f888656",
+        "type": "serial in",
+        "z": "acda1aea8e49d1fc",
+        "name": "",
+        "serial": "e000096b7c41a103",
+        "x": 670,
+        "y": 480,
+        "wires": [
+            [
+                "9078fe97686f4a38",
+                "0dc8191e18a02b0a"
+            ]
+        ]
+    },
+    {
+        "id": "9078fe97686f4a38",
+        "type": "debug",
+        "z": "acda1aea8e49d1fc",
+        "name": "시리얼 RX",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 850,
+        "y": 560,
+        "wires": []
+    },
+    {
+        "id": "103834fdcc0d6065",
+        "type": "ui_audio",
+        "z": "acda1aea8e49d1fc",
+        "name": "사용시작/불가/요금 사운드 출력",
+        "group": "8d59ae977e91954c",
+        "voice": "Google 한국의",
+        "always": false,
+        "x": 1370,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "0dc8191e18a02b0a",
+        "type": "function",
+        "z": "acda1aea8e49d1fc",
+        "name": "사용시작/불가/주차/요금 결정 함수",
+        "func": "var callback = msg.payload;\n\nif (callback == 0)\n    msg.payload = \"사용을 종료합니다.\";\nelse if (callback == 1)\n    msg.payload = \"사용을 시작합니다.\";\nelse if(callback == 4)\n    msg.payload = \"사용할 수 없습니다.\";\nelse if (callback >100 && callback <100000)\n    msg.payload =\"사용을 종료합니다. 요금은\" +callback + \"원입니다.\";\nelse if (callback ==3)\n    msg.payload = \"주차를 확인했습니다. 오백원 할인이 적용됩니다.\";\nelse if (callback == 6)\n    msg.payload = \"배터리가 10퍼센트 미만입니다. 사용에 유의하세요.\"\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 920,
+        "y": 480,
+        "wires": [
+            [
+                "ebe4b313b2e6bbfa"
+            ]
+        ]
+    },
+    {
+        "id": "a8ad9d0d40149db0",
+        "type": "serial out",
+        "z": "acda1aea8e49d1fc",
+        "name": "",
+        "serial": "e000096b7c41a103",
+        "x": 1050,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "1412d1a10b45a10c",
+        "type": "ui_button",
+        "z": "acda1aea8e49d1fc",
+        "name": "종료버튼  TX: 4",
+        "group": "8d59ae977e91954c",
+        "order": 4,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "종료버튼",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "red",
+        "className": "",
+        "icon": "",
+        "payload": "4",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "x": 860,
+        "y": 420,
+        "wires": [
+            [
+                "a8ad9d0d40149db0"
+            ]
+        ]
+    },
+    {
+        "id": "ebe4b313b2e6bbfa",
+        "type": "delay",
+        "z": "acda1aea8e49d1fc",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "3",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 1140,
+        "y": 480,
+        "wires": [
+            [
+                "103834fdcc0d6065",
+                "b03147c75e102927",
+                "de6b3e49c3eac52c"
+            ]
+        ]
+    },
+    {
+        "id": "b03147c75e102927",
+        "type": "ui_text",
+        "z": "acda1aea8e49d1fc",
+        "group": "8d59ae977e91954c",
+        "order": 6,
+        "width": 0,
+        "height": 0,
+        "name": "사용 여부 출력",
+        "label": "사용 여부",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "x": 1320,
+        "y": 540,
+        "wires": []
+    },
+    {
+        "id": "c4c01e0535c66e29",
+        "type": "delay",
+        "z": "acda1aea8e49d1fc",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "2",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 500,
+        "y": 340,
+        "wires": [
+            [
+                "37d443db097bfd89"
+            ]
+        ]
+    },
+    {
+        "id": "c2120ea176816244",
+        "type": "inject",
+        "z": "acda1aea8e49d1fc",
+        "name": "사용 여부 초기메세지",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "사용을 시작하면 요금이 계산됩니다.",
+        "payloadType": "str",
+        "x": 1080,
+        "y": 540,
+        "wires": [
+            [
+                "b03147c75e102927"
+            ]
+        ]
+    },
+    {
+        "id": "981896a92d8fc0fa",
+        "type": "inject",
+        "z": "acda1aea8e49d1fc",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "9",
+        "payloadType": "str",
+        "x": 150,
+        "y": 20,
+        "wires": [
+            [
+                "f3fcf5147214fd48"
+            ]
+        ]
+    },
+    {
+        "id": "f3fcf5147214fd48",
+        "type": "serial out",
+        "z": "acda1aea8e49d1fc",
+        "name": "",
+        "serial": "e000096b7c41a103",
+        "x": 290,
+        "y": 20,
+        "wires": []
+    },
+    {
+        "id": "ce2c7974f570aa8a",
+        "type": "link out",
+        "z": "acda1aea8e49d1fc",
+        "name": "",
+        "mode": "link",
+        "links": [
+            "1234098476a9eba6"
+        ],
+        "x": 875,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "de6b3e49c3eac52c",
+        "type": "link out",
+        "z": "acda1aea8e49d1fc",
+        "name": "",
+        "mode": "link",
+        "links": [
+            "1da7da29c1e3dc95"
+        ],
+        "x": 1255,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "c46176ad56e5e6b7",
+        "type": "ui_button",
+        "z": "acda1aea8e49d1fc",
+        "name": "리셋버튼",
+        "group": "8d59ae977e91954c",
+        "order": 4,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "리셋",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "payload": "9",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "x": 140,
+        "y": 60,
+        "wires": [
+            [
+                "f3fcf5147214fd48"
+            ]
+        ]
+    },
+    {
+        "id": "17cc082dbb4185dc",
+        "type": "tab",
+        "label": "날씨 인식",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "1da7da29c1e3dc95",
+        "type": "link in",
+        "z": "17cc082dbb4185dc",
+        "name": "",
+        "links": [
+            "de6b3e49c3eac52c"
+        ],
+        "x": 255,
+        "y": 40,
+        "wires": [
+            [
+                "ff0e9bde23207125"
+            ]
+        ]
+    },
+    {
+        "id": "ff0e9bde23207125",
+        "type": "function",
+        "z": "17cc082dbb4185dc",
+        "name": "",
+        "func": "if(msg.payload == \"사용을 시작합니다.\"){\n    msg.payload = 1;\n    return msg;\n}",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 140,
+        "y": 120,
+        "wires": [
+            [
+                "17f6bf4a06d28151"
+            ]
+        ]
+    },
+    {
+        "id": "17f6bf4a06d28151",
+        "type": "http request",
+        "z": "17cc082dbb4185dc",
+        "name": "",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://api.openweathermap.org/data/2.5/weather?id=1835553&appid=3a60bcf0c27ac7e7cfe8dcf9920d4b02&lang=kr",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "senderr": false,
+        "x": 290,
+        "y": 120,
+        "wires": [
+            [
+                "d7898361753e7fa8",
+                "dfd0ed33122b5099",
+                "c6373122acd70fbd",
+                "9edb428cf866e5a6"
+            ]
+        ]
+    },
+    {
+        "id": "d7898361753e7fa8",
+        "type": "debug",
+        "z": "17cc082dbb4185dc",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload.weather[0].description",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 560,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "17880e735b8e0c56",
+        "type": "ui_audio",
+        "z": "17cc082dbb4185dc",
+        "name": "날씨 출력",
+        "group": "8d59ae977e91954c",
+        "voice": "Google 한국의",
+        "always": "",
+        "x": 900,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "a58fc7743e51b292",
+        "type": "debug",
+        "z": "17cc082dbb4185dc",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "flag",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 720,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "dfd0ed33122b5099",
+        "type": "function",
+        "z": "17cc082dbb4185dc",
+        "name": "",
+        "func": "var weather = msg.payload.weather[0].description;\n//var weather = 0;\n//var wtr = msg.payload.current.weather[0].main;\n//if (wtr == \"Clear\")\nif(weather == \"맑음\"){\n    msg.payload = \"날씨 정보를 알려드립니다.\"+ weather;\n    return msg;\n}\nelse if(weather != \"맑음\"){\n    msg.payload = \"날씨가 맑지 않습니다. 사용에 유의하세요\";\n    return msg;\n}\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 480,
+        "y": 120,
+        "wires": [
+            [
+                "a58fc7743e51b292",
+                "ff0228d7a08b1c45",
+                "276fe507c168b767",
+                "ab53016a9be8a23b"
+            ]
+        ]
+    },
+    {
+        "id": "9668cca2bf96c027",
+        "type": "inject",
+        "z": "17cc082dbb4185dc",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payloadType": "date",
+        "x": 140,
+        "y": 160,
+        "wires": [
+            [
+                "17f6bf4a06d28151"
+            ]
+        ]
+    },
+    {
+        "id": "ff0228d7a08b1c45",
+        "type": "link out",
+        "z": "17cc082dbb4185dc",
+        "name": "",
+        "mode": "link",
+        "links": [
+            "7c63636d1bb241be"
+        ],
+        "x": 675,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "7c63636d1bb241be",
+        "type": "link in",
+        "z": "17cc082dbb4185dc",
+        "name": "",
+        "links": [
+            "ff0228d7a08b1c45"
+        ],
+        "x": 85,
+        "y": 360,
+        "wires": [
+            [
+                "9199f15b807755e2"
+            ]
+        ]
+    },
+    {
+        "id": "9199f15b807755e2",
+        "type": "function",
+        "z": "17cc082dbb4185dc",
+        "name": "",
+        "func": "if (msg.flag ==1)\n    // 날씨 안좋을 때 시리얼 송신으로 보드에서 부저나 IO 제어하도록\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 210,
+        "y": 360,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "80f32f7b44c48257",
+        "type": "comment",
+        "z": "17cc082dbb4185dc",
+        "name": "",
+        "info": "pro.openweathermap.org/data/2.5/forecast/hourly?q=Seoul&appid=3a60bcf0c27ac7e7cfe8dcf9920d4b02\n// forecast four days\n\nhttp://api.openweathermap.org/data/2.5/weather?id=1835553&appid=3a60bcf0c27ac7e7cfe8dcf9920d4b02&lang=kr\n// city id를 수원으로 맞추면 잘 돌아감\n// 현재 날씨\n\nAPI key: 3a60bcf0c27ac7e7cfe8dcf9920d4b02\n수원시 city id: 1835553\n\nhttps://api.openweathermap.org/data/2.5/onecall?lat=37.291111&lon=127.008888&exclude=hourly,daily&appid=3a60bcf0c27ac7e7cfe8dcf9920d4b02\n",
+        "x": 530,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "c6373122acd70fbd",
+        "type": "debug",
+        "z": "17cc082dbb4185dc",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload.current.weather[0].main",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 590,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "276fe507c168b767",
+        "type": "delay",
+        "z": "17cc082dbb4185dc",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "3",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 720,
+        "y": 80,
+        "wires": [
+            [
+                "17880e735b8e0c56"
+            ]
+        ]
+    },
+    {
+        "id": "ab53016a9be8a23b",
+        "type": "debug",
+        "z": "17cc082dbb4185dc",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 730,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "9edb428cf866e5a6",
+        "type": "function",
+        "z": "17cc082dbb4185dc",
+        "name": "",
+        "func": "var weather = msg.payload.weather[0].description;\n//var weather = 0;\n//var wtr = msg.payload.current.weather[0].main;\n//if (wtr == \"Clear\")\n    \n//msg.payload = \"날씨 정보를 알려드립니다.\"+ weather;\n//msg.flag =1;\n\nif(weather == \"맑음\"){\n    msg.payload = 7;\n    return msg;\n}\nelse if(weather != \"맑음\"){\n    msg.payload = 8;\n    return msg;\n}\n\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 480,
+        "y": 360,
+        "wires": [
+            [
+                "dd11a580f67274bc"
+            ]
+        ]
+    },
+    {
+        "id": "dd11a580f67274bc",
+        "type": "serial out",
+        "z": "17cc082dbb4185dc",
+        "name": "",
+        "serial": "e000096b7c41a103",
+        "x": 610,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "8d59ae977e91954c",
+        "type": "ui_group",
+        "name": "전동 킥보드 이용",
+        "tab": "55cc9273c9ff9d9d",
+        "order": 1,
+        "disp": true,
+        "width": "6",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "e000096b7c41a103",
+        "type": "serial-port",
+        "serialport": "COM6",
+        "serialbaud": "115200",
+        "databits": "8",
+        "parity": "none",
+        "stopbits": "1",
+        "waitfor": "",
+        "dtr": "none",
+        "rts": "none",
+        "cts": "none",
+        "dsr": "none",
+        "newline": "\\n",
+        "bin": "false",
+        "out": "char",
+        "addchar": "",
+        "responsetimeout": "10"
+    },
+    {
+        "id": "55cc9273c9ff9d9d",
+        "type": "ui_tab",
+        "name": "전동 킥보드 대여",
+        "icon": "dashboard",
+        "order": 1,
+        "disabled": false,
+        "hidden": false
+    }
+]
